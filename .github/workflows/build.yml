@@ -28,9 +28,23 @@ jobs:
     - name: Build with Gradle
       run: ./gradlew build
 
-    - name: Upload build artifacts
+    - name: Package Windows executable bundle
+      run: |
+        mkdir -p build/windows-bundle
+        cp build/libs/XiaomiToolV2.jar build/windows-bundle/XiaoMiTool.jar
+        cp launch4j/XiaoMiTool.exe build/windows-bundle/XiaoMiTool.exe
+        cp -r res build/windows-bundle/res
+
+    - name: Upload Windows executable bundle
       uses: actions/upload-artifact@v4
       with:
-        name: xiaomitool-build-artifacts
+        name: XiaoMiToolV2-Windows-App
+        path: build/windows-bundle/
+        if-no-files-found: warn
+
+    - name: Upload Gradle distributions
+      uses: actions/upload-artifact@v4
+      with:
+        name: XiaoMiToolV2-distributions
         path: build/distributions/
         if-no-files-found: warn
