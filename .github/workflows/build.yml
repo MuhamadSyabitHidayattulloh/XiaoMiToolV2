@@ -1,0 +1,50 @@
+name: Build
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up JDK 11
+      uses: actions/setup-java@v4
+      with:
+        java-version: '11'
+        distribution: 'temurin'
+        cache: gradle
+
+    - name: Grant execute permission for gradlew
+      run: chmod +x gradlew
+
+    - name: Build with Gradle
+      run: ./gradlew build
+
+    - name: Package Windows executable bundle
+      run: |
+        mkdir -p build/windows-bundle
+        cp build/libs/XiaomiToolV2.jar build/windows-bundle/XiaoMiTool.jar
+        cp launch4j/XiaoMiTool.exe build/windows-bundle/XiaoMiTool.exe
+        cp -r res build/windows-bundle/res
+
+    - name: Upload Windows executable bundle
+      uses: actions/upload-artifact@v4
+      with:
+        name: XiaoMiToolV2-Windows-App
+        path: build/windows-bundle/
+        if-no-files-found: warn
+
+    - name: Upload Gradle distributions
+      uses: actions/upload-artifact@v4
+      with:
+        name: XiaoMiToolV2-distributions
+        path: build/distributions/
+        if-no-files-found: warn
