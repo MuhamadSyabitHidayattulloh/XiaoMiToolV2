@@ -15,7 +15,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 
 public class XiaomiServiceEntry {
-    private static String URL_FIRST = "https://account.xiaomi.com/pass/serviceLogin?sid=%s&_json=true&passive=true&hidden=false";
+    private static String URL_FIRST = "https://account.xiaomi.com/pass/serviceLogin?sid=%s&_json=true&passive=true&hidden=false&checkSafePhone=true";
     private XiaomiKeystore keystore;
     private String id;
     private String serviceToken;
@@ -85,6 +85,22 @@ public class XiaomiServiceEntry {
         response = EasyHttp.get(url);
         HashMap<String, String> cookies = response.getCookies();
         serviceToken = cookies.get("serviceToken");
+        if (serviceToken == null) {
+            // Fallback: check if serviceToken is returned in response headers or body
+            String body = response.getBody();
+            if (body != null && !body.isEmpty()) {
+                String cleanBody = XiaomiUtilities.findJsonStart(body);
+                if (cleanBody != null) {
+                    try {
+                        JSONObject json = new JSONObject(cleanBody);
+                        if (json.has("serviceToken")) {
+                            serviceToken = json.getString("serviceToken");
+                        }
+                    } catch (JSONException ignored) {
+                    }
+                }
+            }
+        }
         if (serviceToken == null) {
             throw new XiaomiProcedureException("[getServiceToken] Missing serviceToken cookie");
         }
